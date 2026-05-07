@@ -27,3 +27,6 @@ node_modules/
 .DS_Store
 run_server.bat
 iniciar.bat
+
+# Export do banco completo (quando necessário versionar)
+!caixa_completo.db

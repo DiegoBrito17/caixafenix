@@ -26,5 +26,5 @@ USER appuser
 
 ENV FLASK_APP=app.py
 
-# production entrypoint using gunicorn
-CMD ["gunicorn", "-w", "4", "-k", "gthread", "--bind", "0.0.0.0:8000", "app:app"]
+# production entrypoint (optional one-time migration + gunicorn)
+CMD ["sh", "/app/start.sh"]

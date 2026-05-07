@@ -12,6 +12,7 @@ import string
 import socket
 import unicodedata
 import secrets
+import shutil
 
 app = Flask(__name__)
 
@@ -77,6 +78,14 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'database')
 # Criar pasta database se nÃ£o existir
 os.makedirs(db_path, exist_ok=True)
+# Se existir um banco "completo" versionado no repositório, usar como base (não apaga o atual).
+_sqlite_db_file = os.path.join(db_path, 'caixa.db')
+_sqlite_seed_file = os.path.join(basedir, 'caixa_completo.db')
+try:
+    if not os.path.exists(_sqlite_db_file) and os.path.exists(_sqlite_seed_file):
+        shutil.copyfile(_sqlite_seed_file, _sqlite_db_file)
+except Exception:
+    pass
 # Render/Prod: usar DATABASE_URL (PostgreSQL). Dev local: SQLite.
 # Railway/Render podem usar nomes diferentes de env.
 database_url = (
@@ -972,7 +981,7 @@ def login():
                         )
                         db.session.add(caixa_para_usar)
                         db.session.commit()
-                        flash('âœ… Novo caixa aberto com sucesso!', 'success')
+                        flash('OK: Novo caixa aberto com sucesso!', 'success')
                     
                     session['user_id'] = usuario.id
                     session['user_nome'] = usuario.nome
@@ -993,7 +1002,7 @@ def login():
                         session['saldo_inicial'] = caixa_aberto.saldo_inicial
                         session['hora_abertura'] = caixa_aberto.hora_abertura.strftime('%H:%M:%S')
 
-                        flash(f'âœ… Bem-vindo, {usuario.nome}! Caixa do turno {turno} acessado.', 'success')
+                        flash(f'OK: Bem-vindo, {usuario.nome}! Caixa do turno {turno} acessado.', 'success')
                         return redirect(url_for('vendas'))
 
                     if caixa_fechado:
@@ -1006,7 +1015,7 @@ def login():
                         session['saldo_inicial'] = caixa_fechado.saldo_inicial
                         session['hora_abertura'] = caixa_fechado.hora_abertura.strftime('%H:%M:%S')
                         
-                        flash(f'âš ï¸ Acessando caixa FECHADO de {turno} (Modo VisualizaÃ§Ã£o).', 'warning')
+                        flash(f'Aviso: Acessando caixa FECHADO de {turno} (Modo Visualização).', 'warning')
                         return redirect(url_for('vendas'))
                     
                     novo_caixa = Caixa(
@@ -1023,7 +1032,7 @@ def login():
                     session['data'] = data
                     session['saldo_inicial'] = novo_caixa.saldo_inicial
                     session['hora_abertura'] = novo_caixa.hora_abertura.strftime('%H:%M:%S')
-                    flash('âœ… Caixa aberto com sucesso!', 'success')
+                    flash('OK: Caixa aberto com sucesso!', 'success')
                     return redirect(url_for('vendas'))
             else:
                 flash('❌ Credenciais inválidas!', 'danger')
@@ -2443,11 +2452,11 @@ def admin_excluir_caixa_completo(caixa_id):
         db.session.delete(caixa)
         db.session.commit()
         
-        flash(f'âœ… Caixa {info_caixa} excluÃ­do permanentemente com todos os registros!', 'success')
+        flash(f'OK: Caixa {info_caixa} excluído permanentemente com todos os registros!', 'success')
         
     except Exception as e:
         db.session.rollback()
-        flash(f'âŒ Erro ao excluir caixa: {str(e)}', 'danger')
+        flash(f'Erro ao excluir caixa: {str(e)}', 'danger')
     
     return redirect(url_for('admin_caixas'))
 
@@ -2632,7 +2641,7 @@ def admin_fechar_caixa_forcado(caixa_id):
         
         db.session.commit()
         
-        flash(f'âš ï¸ Caixa #{caixa_id} fechado pelo administrador! Operador: {caixa.operador.nome}', 'warning')
+        flash(f'Aviso: Caixa #{caixa_id} fechado pelo administrador! Operador: {caixa.operador.nome}', 'warning')
         return redirect(url_for('admin_visualizar_caixa', caixa_id=caixa_id))
     except Exception as e:
         db.session.rollback()
@@ -3284,10 +3293,10 @@ def novo_suprimento():
         db.session.add(suprimento)
         db.session.commit()
         
-        flash(f'âœ… Suprimento de R$ {valor:.2f} registrado com sucesso!', 'success')
+        flash(f'OK: Suprimento de R$ {valor:.2f} registrado com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'âŒ Erro ao registrar suprimento: {str(e)}', 'danger')
+        flash(f'Erro ao registrar suprimento: {str(e)}', 'danger')
     
     return redirect(url_for('suprimentos'))
 
@@ -3306,11 +3315,11 @@ def admin_editar_suprimento(suprimento_id):
             suprimento.motivo = request.form.get('motivo')
             suprimento.observacao = request.form.get('observacao', '')
             db.session.commit()
-            flash('âœ… Suprimento atualizado com sucesso!', 'success')
+            flash('OK: Suprimento atualizado com sucesso!', 'success')
             return redirect(url_for('suprimentos'))
         except Exception as e:
             db.session.rollback()
-            flash(f'âŒ Erro ao atualizar: {str(e)}', 'danger')
+            flash(f'Erro ao atualizar: {str(e)}', 'danger')
     
     return render_template('admin_editar_suprimento.html', suprimento=suprimento)
 
@@ -3323,12 +3332,12 @@ def admin_deletar_suprimento(suprimento_id):
         if suprimento:
             db.session.delete(suprimento)
             db.session.commit()
-            flash('âœ… Suprimento removido com sucesso!', 'success')
+            flash('OK: Suprimento removido com sucesso!', 'success')
         else:
             flash('Suprimento nÃ£o encontrado!', 'warning')
     except Exception as e:
         db.session.rollback()
-        flash(f'âŒ Erro ao deletar: {str(e)}', 'danger')
+        flash(f'Erro ao deletar: {str(e)}', 'danger')
     
     return redirect(url_for('suprimentos'))
 
@@ -3349,11 +3358,11 @@ def admin_editar_sangria(sangria_id):
             sangria.motivo = request.form.get('motivo')
             sangria.observacao = request.form.get('observacao', '')
             db.session.commit()
-            flash('âœ… Sangria atualizada com sucesso!', 'success')
+            flash('OK: Sangria atualizada com sucesso!', 'success')
             return redirect(url_for('sangria'))
         except Exception as e:
             db.session.rollback()
-            flash(f'âŒ Erro ao atualizar: {str(e)}', 'danger')
+            flash(f'Erro ao atualizar: {str(e)}', 'danger')
     
     return render_template('admin_editar_sangria.html', sangria=sangria)
 
@@ -3366,10 +3375,10 @@ def admin_deletar_sangria(sangria_id):
         if sangria:
             db.session.delete(sangria)
             db.session.commit()
-            flash('âœ… Sangria removida com sucesso!', 'success')
+            flash('OK: Sangria removida com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'âŒ Erro ao deletar: {str(e)}', 'danger')
+        flash(f'Erro ao deletar: {str(e)}', 'danger')
     
     return redirect(url_for('sangria'))
 
@@ -3384,10 +3393,10 @@ def admin_deletar_venda_completa(venda_id):
             PagamentoVenda.query.filter_by(venda_id=venda_id).delete()
             db.session.delete(venda)
             db.session.commit()
-            flash('âœ… Venda removida com sucesso!', 'success')
+            flash('OK: Venda removida com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'âŒ Erro ao deletar venda: {str(e)}', 'danger')
+        flash(f'Erro ao deletar venda: {str(e)}', 'danger')
     
     return redirect(url_for('vendas'))
 
@@ -3402,10 +3411,10 @@ def admin_deletar_delivery_completo(delivery_id):
             PagamentoDelivery.query.filter_by(delivery_id=delivery_id).delete()
             db.session.delete(delivery)
             db.session.commit()
-            flash('âœ… Delivery removido com sucesso!', 'success')
+            flash('OK: Delivery removido com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'âŒ Erro ao deletar delivery: {str(e)}', 'danger')
+        flash(f'Erro ao deletar delivery: {str(e)}', 'danger')
     
     return redirect(url_for('delivery'))
 
@@ -3418,10 +3427,10 @@ def admin_deletar_despesa_completa(despesa_id):
         if despesa:
             db.session.delete(despesa)
             db.session.commit()
-            flash('âœ… Despesa removida com sucesso!', 'success')
+            flash('OK: Despesa removida com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'âŒ Erro ao deletar despesa: {str(e)}', 'danger')
+        flash(f'Erro ao deletar despesa: {str(e)}', 'danger')
     
     return redirect(url_for('despesas'))
 
@@ -3485,12 +3494,12 @@ def admin_editar_senha_usuario(usuario_id):
         if nova_senha and len(nova_senha) >= 3:
             usuario.senha = generate_password_hash(nova_senha)
             db.session.commit()
-            flash(f'âœ… Senha de {usuario.nome} alterada com sucesso!', 'success')
+            flash(f'OK: Senha de {usuario.nome} alterada com sucesso!', 'success')
         else:
-            flash('âŒ Senha deve ter no mÃ­nimo 3 caracteres!', 'warning')
+            flash('Senha deve ter no mínimo 3 caracteres!', 'warning')
     except Exception as e:
         db.session.rollback()
-        flash(f'âŒ Erro ao alterar senha: {str(e)}', 'danger')
+        flash(f'Erro ao alterar senha: {str(e)}', 'danger')
     
     return redirect(url_for('configuracoes'))
 
@@ -3511,21 +3520,21 @@ def admin_deletar_usuario(usuario_id):
         if usuario.acesso_configuracoes:
             total_admins = Usuario.query.filter_by(acesso_configuracoes=True, ativo=True).count()
             if total_admins <= 1:
-                flash('âŒ NÃ£o Ã© possÃ­vel excluir o Ãºltimo administrador do sistema!', 'danger')
+                flash('Erro: Não é possível excluir o último administrador do sistema!', 'danger')
                 return redirect(url_for('configuracoes'))
         
         # Verificar se tem caixas vinculados
         if len(usuario.caixas) > 0:
-            flash('âŒ NÃ£o Ã© possÃ­vel excluir usuÃ¡rio com caixas registrados! Primeiro transfira ou remova os caixas.', 'danger')
+            flash('Erro: Não é possível excluir usuário com caixas registrados! Primeiro transfira ou remova os caixas.', 'danger')
             return redirect(url_for('configuracoes'))
         
         nome_usuario = usuario.nome
         db.session.delete(usuario)
         db.session.commit()
-        flash(f'âœ… UsuÃ¡rio {nome_usuario} excluÃ­do com sucesso!', 'success')
+        flash(f'OK: Usuário {nome_usuario} excluído com sucesso!', 'success')
     except Exception as e:
         db.session.rollback()
-        flash(f'âŒ Erro ao deletar usuÃ¡rio: {str(e)}', 'danger')
+        flash(f'Erro ao deletar usuário: {str(e)}', 'danger')
     
     return redirect(url_for('configuracoes'))
 
@@ -4486,7 +4495,7 @@ def init_db():
             db.session.add(Motoboy(nome=nome, taxa_padrao=5.00))
         
         db.session.commit()
-        print("âœ… Banco de dados inicializado com sucesso!")
+        print("OK: Banco de dados inicializado com sucesso!")
 
 @app.route('/criar-chave-teste')
 def criar_chave_teste():
@@ -4587,7 +4596,7 @@ if __name__ == '__main__':
             with db.engine.connect() as conn:
                 conn.execute(text('ALTER TABLE usuario ADD COLUMN acesso_relatorios BOOLEAN DEFAULT 0'))
                 conn.commit()
-            print("âœ… Coluna 'acesso_relatorios' adicionada automaticamente!")
+            print("OK: Coluna 'acesso_relatorios' adicionada automaticamente!")
         except Exception:
             pass  # Coluna jÃ¡ existe ou erro ao adicionar
 

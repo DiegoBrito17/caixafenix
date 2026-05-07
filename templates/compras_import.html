@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block page_icon %}file-import{% endblock %}
+{% block page_title %}Importar Compra (XML){% endblock %}
+{% block title %}Importar Compra (XML){% endblock %}
+{% block content %}
+<div class="main-card">
+  <div class="card-body">
+    <h2 class="mb-3">Importar XML (NFe)</h2>
+    <form method="post" enctype="multipart/form-data">
+  <div class="mb-3">
+    <label class="form-label">Arquivo XML</label>
+    <input type="file" name="xml_file" accept=".xml" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Fornecedor (opcional)</label>
+    <input type="text" name="fornecedor" class="form-control">
+  </div>
+  <div class="mb-3">
+    <label class="form-label">Conversão (unidades por embalagem) — aplica para todos os itens</label>
+    <input type="text" name="conversao" class="form-control" value="1">
+  </div>
+  <button class="btn btn-primary">Importar</button>
+  <a class="btn btn-secondary" href="{{ url_for('compras') }}">Voltar</a>
+</form>
+{% endblock %}

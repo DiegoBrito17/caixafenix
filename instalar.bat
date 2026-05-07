@@ -5,7 +5,7 @@ echo ========================================
 echo.
 
 echo [1/4] Criando ambiente virtual...
-python -m venv venv
+python -m venv .venv
 if %errorlevel% neq 0 (
     echo ERRO: Falha ao criar ambiente virtual
     echo Certifique-se de que o Python esta instalado
@@ -14,10 +14,10 @@ if %errorlevel% neq 0 (
 )
 
 echo [2/4] Ativando ambiente virtual...
-call venv\Scripts\activate.bat
+call .venv\Scripts\activate.bat
 
 echo [3/4] Instalando dependencias...
-pip install Flask Flask-SQLAlchemy Werkzeug
+pip install -r requirements.txt
 if %errorlevel% neq 0 (
     echo ERRO: Falha ao instalar dependencias
     pause

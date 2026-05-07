@@ -19,7 +19,7 @@ instalar.bat
 iniciar.bat
 ```
 
-**Pronto!** Acesse: http://localhost:5000
+**Pronto!** Acesse a URL exibida no terminal
 
 ---
 
@@ -30,26 +30,26 @@ iniciar.bat
 cd sistema_caixa
 
 # 2. Crie ambiente virtual
-python -m venv venv
+python -m venv .venv
 
 # 3. Ative o ambiente virtual
 # Windows:
-venv\Scripts\activate
+\.venv\Scripts\activate
 # Linux/Mac:
-source venv/bin/activate
+source .venv/bin/activate
 
 # 4. Instale dependências
-pip install Flask Flask-SQLAlchemy Werkzeug
+pip install -r requirements.txt
 
 # 5. Execute
-python app.py
+run_server.bat
 ```
 
 ---
 
 ## 🔑 Login Padrão
 
-- **URL:** http://localhost:5000
+- **URL:** a URL exibida no terminal
 - **Usuário:** admin
 - **Senha:** 123
 

@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Licenças Cadastradas</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .card {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .status-ativa { background-color: #d4edda; }
+        .status-expirada { background-color: #f8d7da; }
+        .status-bloqueada { background-color: #fff3cd; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="mb-4 text-center">
+            <i class="fas fa-key me-2"></i>Licenças Cadastradas
+        </h1>
+        
+        <div class="mb-4">
+            <a href="{{ url_for('ativacao') }}" class="btn btn-primary">
+                <i class="fas fa-plus me-2"></i>Nova Ativação
+            </a>
+            <a href="{{ url_for('login') }}" class="btn btn-success ms-2">
+                <i class="fas fa-sign-in-alt me-2"></i>Ir para Login
+            </a>
+        </div>
+        
+        {% if licencas %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>E-mail</th>
+                        <th>Chave de Ativação</th>
+                        <th>Status</th>
+                        <th>Data Ativação</th>
+                        <th>Data Expiração</th>
+                        <th>Dispositivos</th>
+                        <th>Ativa</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for licenca in licencas %}
+                    <tr>
+                        <td>{{ licenca.id }}</td>
+                        <td>{{ licenca.email }}</td>
+                        <td>
+                            <code class="bg-light p-1 rounded">{{ licenca.chave_ativacao }}</code>
+                            <button class="btn btn-sm btn-outline-secondary ms-2" 
+                                    onclick="navigator.clipboard.writeText('{{ licenca.chave_ativacao }}')"
+                                    title="Copiar chave">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                        </td>
+                        <td>
+                            {% if licenca.status == 'ATIVA' %}
+                                <span class="badge bg-success">ATIVA</span>
+                            {% elif licenca.status == 'EXPIRADA' %}
+                                <span class="badge bg-danger">EXPIRADA</span>
+                            {% elif licenca.status == 'BLOQUEADA' %}
+                                <span class="badge bg-warning">BLOQUEADA</span>
+                            {% else %}
+                                <span class="badge bg-secondary">{{ licenca.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if licenca.data_ativacao %}
+                                {{ licenca.data_ativacao.strftime('%d/%m/%Y %H:%M') }}
+                            {% else %}
+                                <span class="text-muted">-</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if licenca.data_expiracao %}
+                                {{ licenca.data_expiracao.strftime('%d/%m/%Y') }}
+                                {% set dias_restantes = (licenca.data_expiracao - datetime.utcnow()).days %}
+                                {% if dias_restantes > 0 %}
+                                    <br><small class="text-success">{{ dias_restantes }} dias restantes</small>
+                                {% else %}
+                                    <br><small class="text-danger">Expirada há {{ -dias_restantes }} dias</small>
+                                {% endif %}
+                            {% else %}
+                                <span class="text-muted">Sem expiração</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {{ licenca.dispositivos|length }}/{{ licenca.max_dispositivos }}
+                            {% if licenca.dispositivos %}
+                            <button class="btn btn-sm btn-info ms-2" 
+                                    onclick="mostrarDispositivos({{ licenca.id }})"
+                                    title="Ver dispositivos">
+                                <i class="fas fa-laptop"></i>
+                            </button>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if licenca.ativo %}
+                                <span class="badge bg-success">SIM</span>
+                            {% else %}
+                                <span class="badge bg-danger">NÃO</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <form method="POST" action="{{ url_for('toggle_licenca', licenca_id=licenca.id) }}" 
+                                      style="display: inline;">
+                                    {% if licenca.ativo %}
+                                    <button type="submit" class="btn btn-warning" title="Desativar">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+                                    {% else %}
+                                    <button type="submit" class="btn btn-success" title="Ativar">
+                                        <i class="fas fa-check"></i>
+                                    </button>
+                                    {% endif %}
+                                </form>
+                                <form method="POST" action="{{ url_for('deletar_licenca', licenca_id=licenca.id) }}" 
+                                      onsubmit="return confirm('Tem certeza que deseja excluir esta licença?');"
+                                      style="display: inline;">
+                                    <button type="submit" class="btn btn-danger" title="Excluir">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Dispositivos da licença (hidden) -->
+                    {% if licenca.dispositivos %}
+                    <tr id="dispositivos-{{ licenca.id }}" style="display: none;">
+                        <td colspan="9" class="bg-light">
+                            <h6 class="mt-2">Dispositivos Associados:</h6>
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Nome/IP</th>
+                                        <th>Último Acesso</th>
+                                        <th>Status</th>
+                                        <th>ID Dispositivo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for dispositivo in licenca.dispositivos %}
+                                    <tr>
+                                        <td>{{ dispositivo.nome }}<br><small>{{ dispositivo.endereco_ip }}</small></td>
+                                        <td>{{ dispositivo.ultimo_acesso.strftime('%d/%m/%Y %H:%M') }}</td>
+                                        <td>
+                                            {% if dispositivo.status == 'ATIVO' %}
+                                                <span class="badge bg-success">Ativo</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Bloqueado</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><code>{{ dispositivo.dispositivo_id }}</code></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="card">
+            <div class="card-header bg-info text-white">
+                <i class="fas fa-chart-bar me-2"></i>Estatísticas
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 text-center">
+                        <h3>{{ licencas|length }}</h3>
+                        <p class="text-muted">Total de Licenças</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3 class="text-success">{{ licencas|selectattr('status', 'equalto', 'ATIVA')|list|length }}</h3>
+                        <p class="text-muted">Licenças Ativas</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3 class="text-danger">{{ licencas|selectattr('status', 'equalto', 'EXPIRADA')|list|length }}</h3>
+                        <p class="text-muted">Licenças Expiradas</p>
+                    </div>
+                    <div class="col-md-3 text-center">
+                        <h3 class="text-warning">{{ licencas|selectattr('status', 'equalto', 'BLOQUEADA')|list|length }}</h3>
+                        <p class="text-muted">Licenças Bloqueadas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        {% else %}
+        <div class="alert alert-warning text-center">
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            Nenhuma licença cadastrada no sistema.
+            <a href="{{ url_for('ativacao') }}" class="alert-link">Clique aqui para criar uma licença</a>.
+        </div>
+        {% endif %}
+    </div>
+
+    <script>
+        function mostrarDispositivos(licencaId) {
+            const row = document.getElementById('dispositivos-' + licencaId);
+            if (row.style.display === 'none') {
+                row.style.display = 'table-row';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+        
+        // Copiar todas as chaves
+        document.getElementById('copiar-todas').addEventListener('click', function() {
+            const chaves = [];
+            document.querySelectorAll('code').forEach(code => {
+                chaves.push(code.textContent);
+            });
+            navigator.clipboard.writeText(chaves.join('\n'));
+            alert('Todas as chaves copiadas para a área de transferência!');
+        });
+    </script>
+</body>
+</html>

@@ -22,10 +22,10 @@ instalar.bat
 **Solução:**
 ```bash
 # Ative o ambiente virtual
-venv\Scripts\activate
+\.venv\Scripts\activate
 
 # Instale as dependências
-pip install Flask Flask-SQLAlchemy Werkzeug
+pip install -r requirements.txt
 ```
 
 ---
@@ -55,19 +55,19 @@ iniciar.bat
 ### Opção 2: Manual
 ```bash
 # 1. Crie ambiente virtual
-python -m venv venv
+python -m venv .venv
 
 # 2. Ative o ambiente
-venv\Scripts\activate
+\.venv\Scripts\activate
 
 # 3. Instale dependências
-pip install Flask Flask-SQLAlchemy Werkzeug
+pip install -r requirements.txt
 
 # 4. Crie pasta database
 mkdir database
 
 # 5. Execute o sistema
-python app.py
+run_server.bat
 ```
 
 ---
@@ -76,13 +76,13 @@ python app.py
 
 ```bash
 # 1. Crie ambiente virtual
-python3 -m venv venv
+python3 -m venv .venv
 
 # 2. Ative o ambiente
-source venv/bin/activate
+source .venv/bin/activate
 
 # 3. Instale dependências
-pip install Flask Flask-SQLAlchemy Werkzeug
+pip install -r requirements.txt
 
 # 4. Crie pasta database
 mkdir -p database
@@ -95,9 +95,9 @@ python app.py
 
 ## 🔑 Acesso Padrão
 
-- **URL:** http://localhost:5000
+- **URL:** a URL exibida no terminal
 - **Usuário:** admin
-- **Senha:** 123
+- **Senha:** definida no primeiro seed (ver terminal) ou via variável `ADMIN_PASSWORD`
 
 ---
 
@@ -112,7 +112,7 @@ from werkzeug.security import generate_password_hash
 
 with app.app_context():
     admin = Usuario.query.filter_by(nome='admin').first()
-    admin.senha = generate_password_hash('123')
+    admin.senha = generate_password_hash('NOVA_SENHA_AQUI')
     db.session.commit()
     print("Senha resetada!")
 ```
@@ -125,16 +125,16 @@ with app.app_context():
 
 ### O sistema não abre no navegador?
 
-1. Verifique se está rodando: veja se aparece "Running on http://127.0.0.1:5000"
-2. Tente acessar: http://127.0.0.1:5000
+1. Verifique se está rodando: veja se aparece "Servidor Flask iniciado em http://127.0.0.1:<porta>"
+2. Tente acessar a URL mostrada no terminal
 3. Verifique o firewall do Windows
-4. Certifique-se de que a porta 5000 não está em uso
+4. Certifique-se de que a porta mostrada no terminal não está em uso
 
 ### Erro de porta já em uso?
 
-Altere a porta no arquivo `app.py` (última linha):
-```python
-app.run(debug=True, host='0.0.0.0', port=5001)  # Use 5001 ou outra porta
+Use o arquivo `run_server.bat` ou o comando abaixo para escolher uma porta livre:
+```bash
+python app.py
 ```
 
 ---

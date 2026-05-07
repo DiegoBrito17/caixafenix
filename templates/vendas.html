@@ -1,15 +1,32 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 
 {% block title %}Vendas - Sistema de Caixa{% endblock %}
 {% block page_title %}Vendas{% endblock %}
 {% block page_icon %}shopping-cart{% endblock %}
 
-{% block header_buttons %}{% endblock %}
+{% block header_buttons %}
+<a href="{{ url_for('vendas_modelo_planilha') }}" class="btn btn-outline-primary btn-sm">
+    <i class="fas fa-file-excel me-1"></i>Baixar Planilha
+</a>
+<a href="{{ url_for('vendas_importar_planilha') }}" class="btn btn-primary btn-sm">
+    <i class="fas fa-upload me-1"></i>Importar Planilha
+</a>
+{% endblock %}
 
 {% block styles %}
 <style>
     .vendas-kpis {
-        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        display: flex;
+        gap: 1rem;
+        align-items: stretch;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+    .vendas-kpis .stat-card.compact { flex: 0 0 220px; }
+    /* Melhor contraste para o ícone de Vendas Loja (store) */
+    .stat-card.compact .stat-icon.info {
+        background: linear-gradient(135deg,#2563eb,#1e40af) !important;
+        color: #ffffff !important;
     }
     .stat-card.compact {
         padding: 0.85rem 1rem;
@@ -36,6 +53,17 @@
         padding: 0.7rem 0.85rem;
         min-height: 78px;
     }
+    .pay-cards .stat-card.compact .stat-card-inner{display:flex;align-items:center;gap:0.75rem}
+    .pay-cards .pay-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);box-shadow:0 2px 6px rgba(0,0,0,0.06)}
+    .pay-cards .pay-icon i{font-size:18px;color:rgba(0,0,0,0.75)}
+    .pay-cards .stat-content h3{font-weight:800;font-size:1.05rem}
+    .pay-cards .stat-content p{font-weight:700;margin:0;color:#374151;font-size:0.78rem}
+    .pay-cards .dinheiro .pay-icon{background:linear-gradient(135deg,#ecfccb,#bbf7d0)}
+    .pay-cards .credito .pay-icon{background:linear-gradient(135deg,#dbeafe,#bfdbfe)}
+    .pay-cards .debito .pay-icon{background:linear-gradient(135deg,#e0f2fe,#bae6fd)}
+    .pay-cards .pix .pay-icon{background:linear-gradient(135deg,#f0fdf4,#bbf7d0)}
+    .pay-cards .online .pay-icon{background:linear-gradient(135deg,#f3e8ff,#e9d5ff)}
+    .pay-cards .conta .pay-icon{background:linear-gradient(135deg,#fffbeb,#fde68a)}
     .pay-cards .stat-card.compact .stat-content h3 {
         font-size: 1.1rem;
     }
@@ -52,7 +80,7 @@
     .pay-cards .online { border-left-color: #8b5cf6; }
     .pay-cards .conta { border-left-color: #f59e0b; }
     .vendas-top-tight {
-        margin-top: -6px;
+        margin-top: -14px;
     }
     .vendas-table .table thead th {
         background: linear-gradient(90deg, rgba(67, 97, 238, 0.08) 0%, rgba(114, 9, 183, 0.06) 100%);
@@ -83,11 +111,89 @@
         font-weight: 700;
         color: #111827;
     }
+    .filters-card {
+        overflow: visible;
+        margin-bottom: 0.75rem !important;
+    }
+    .filters-card .filters-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .filters-card .form-label {
+        font-size: 0.75rem;
+        margin-bottom: 0.25rem;
+        opacity: 0.85;
+    }
+    .filters-card .form-control,
+    .filters-card .form-select {
+        padding-top: 0.35rem;
+        padding-bottom: 0.35rem;
+        font-size: 0.9rem;
+    }
+    .filters-card .form-control-sm,
+    .filters-card .form-select-sm {
+        font-size: 0.85rem;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+    .filters-card .btn-sm {
+        padding: 0.35rem 0.6rem;
+    }
+    .filters-card .card-header {
+        padding: 0.35rem 0.75rem;
+    }
+    .filters-card .card-body {
+        padding: 0.45rem 0.75rem;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid vendas-top-tight">
+    <div class="main-card mb-3 filters-card">
+        <div class="card-header bg-primary">
+            <h5 class="filters-title"><i class="fas fa-filter"></i>Filtros</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('vendas') }}" class="row g-1 align-items-end">
+                <div class="col-12 col-md-2 col-lg-2">
+                    <label class="form-label">Período</label>
+                    <select class="form-select form-select-sm" name="periodo">
+                        <option value="dia" {% if periodo_filtro == 'dia' %}selected{% endif %}>Dia</option>
+                        <option value="semana" {% if periodo_filtro == 'semana' %}selected{% endif %}>Semana</option>
+                        <option value="mes" {% if periodo_filtro == 'mes' %}selected{% endif %}>Mês</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3 col-lg-3">
+                    <label class="form-label">Data inicial</label>
+                    <input type="date" class="form-control form-control-sm" name="data_inicio" value="{{ data_inicio_filtro.strftime('%Y-%m-%d') if data_inicio_filtro else '' }}">
+                </div>
+                <div class="col-12 col-md-3 col-lg-3">
+                    <label class="form-label">Data final</label>
+                    <input type="date" class="form-control form-control-sm" name="data_fim" value="{{ data_fim_filtro.strftime('%Y-%m-%d') if data_fim_filtro else '' }}">
+                </div>
+                <div class="col-12 col-md-2 col-lg-2">
+                    <label class="form-label">Turno</label>
+                    <select class="form-select form-select-sm" name="turno">
+                        {% for t in turnos_disponiveis %}
+                        <option value="{{ t }}" {% if t == turno_filtro %}selected{% endif %}>{{ t }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 col-lg-2 d-grid">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-search me-1"></i>Aplicar
+                    </button>
+                </div>
+            </form>
+            <div class="mt-1 small text-muted">Intervalo (inicial/final) tem prioridade.</div>
+        </div>
+    </div>
+
     <!-- Resumo -->
     <div class="stats-container vendas-kpis mb-3">
         <div class="stat-card compact">
@@ -100,13 +206,13 @@
                 </div>
             </div>
             <div class="stat-content">
-                <h3 class="currency-value">{{ totais.total_vendas|default(0) }}</h3>
+                <h3 class="currency-value">{{ format_currency(totais.total_vendas|default(0)) }}</h3>
                 <p>Total de Vendas</p>
             </div>
         </div>
         <div class="stat-card compact info">
             <div class="stat-card-header">
-                <div class="https://static.vecteezy.com/system/resources/previews/000/437/078/original/vector-statistics-icon.jpg">
+                <div class="stat-icon info">
                     <i class="fas fa-store"></i>
                 </div>
                 <div class="stat-trend">
@@ -114,8 +220,22 @@
                 </div>
             </div>
             <div class="stat-content">
-                <h3 class="currency-value">{{ totais.vendas_loja|default(0) }}</h3>
+                <h3 class="currency-value">{{ format_currency(totais.vendas_loja|default(0)) }}</h3>
                 <p>Vendas Loja</p>
+            </div>
+        </div>
+        <div class="stat-card compact info">
+            <div class="stat-card-header">
+                <div class="stat-icon info">
+                    <i class="fas fa-ticket-alt"></i>
+                </div>
+                <div class="stat-trend">
+                    <i class="fas fa-equals"></i>
+                </div>
+            </div>
+            <div class="stat-content">
+                <h3 class="currency-value">{{ format_currency(metricas.ticket_medio|default(0)) }}</h3>
+                <p>Ticket M&eacute;dio</p>
             </div>
         </div>
         <div class="stat-card compact success">
@@ -128,7 +248,7 @@
                 </div>
             </div>
             <div class="stat-content">
-                <h3 class="currency-value">{{ totais.vendas_delivery|default(0) }}</h3>
+                <h3 class="currency-value">{{ format_currency(totais_delivery.total_delivery|default(0)) }}</h3>
                 <p>Vendas Delivery</p>
             </div>
         </div>
@@ -159,49 +279,67 @@
             <div class="row g-3 pay-cards">
                 <div class="col-md-2 col-6">
                     <div class="stat-card compact p-3 dinheiro">
-                        <div class="stat-content">
-                            <h3 class="currency-value">{{ totais.dinheiro|default(0) }}</h3>
-                            <p>Dinheiro</p>
+                        <div class="stat-card-inner">
+                            <div class="pay-icon"><i class="fas fa-money-bill-wave"></i></div>
+                            <div class="stat-content">
+                                <h3 class="currency-value">{{ format_currency(totais.dinheiro|default(0)) }}</h3>
+                                <p>Dinheiro</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-2 col-6">
                     <div class="stat-card compact p-3 credito">
-                        <div class="stat-content">
-                            <h3 class="currency-value">{{ totais.credito|default(0) }}</h3>
-                            <p>Crédito</p>
+                        <div class="stat-card-inner">
+                            <div class="pay-icon"><i class="fas fa-credit-card"></i></div>
+                            <div class="stat-content">
+                                <h3 class="currency-value">{{ format_currency(totais.credito|default(0)) }}</h3>
+                                <p>Crédito</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-2 col-6">
                     <div class="stat-card compact p-3 debito">
-                        <div class="stat-content">
-                            <h3 class="currency-value">{{ totais.debito|default(0) }}</h3>
-                            <p>Débito</p>
+                        <div class="stat-card-inner">
+                            <div class="pay-icon"><i class="fas fa-credit-card"></i></div>
+                            <div class="stat-content">
+                                <h3 class="currency-value">{{ format_currency(totais.debito|default(0)) }}</h3>
+                                <p>Débito</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-2 col-6">
                     <div class="stat-card compact p-3 pix">
-                        <div class="stat-content">
-                            <h3 class="currency-value">{{ totais.pix|default(0) }}</h3>
-                            <p>PIX</p>
+                        <div class="stat-card-inner">
+                            <div class="pay-icon"><i class="fas fa-bolt"></i></div>
+                            <div class="stat-content">
+                                <h3 class="currency-value">{{ format_currency(totais.pix|default(0)) }}</h3>
+                                <p>PIX</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-2 col-6">
                     <div class="stat-card compact p-3 online">
-                        <div class="stat-content">
-                            <h3 class="currency-value">{{ totais.online|default(0) }}</h3>
-                            <p>Online</p>
+                        <div class="stat-card-inner">
+                            <div class="pay-icon"><i class="fas fa-globe"></i></div>
+                            <div class="stat-content">
+                                <h3 class="currency-value">{{ format_currency(totais.online|default(0)) }}</h3>
+                                <p>Online</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-2 col-6">
                     <div class="stat-card compact p-3 conta">
-                        <div class="stat-content">
-                            <h3 class="currency-value">{{ totais.contas_assinadas|default(0) }}</h3>
-                            <p>Conta Assinada</p>
+                        <div class="stat-card-inner">
+                            <div class="pay-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                            <div class="stat-content">
+                                <h3 class="currency-value">{{ format_currency(totais.contas_assinadas|default(0)) }}</h3>
+                                <p>Conta Assinada</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -455,20 +593,9 @@
             return true;
         });
         
-        // Formatar valores na tabela
-        $('.currency-value').each(function() {
-            let texto = $(this).text().trim();
-            let numero = texto.match(/\d+[\.,]?\d*/g);
-            if (numero) {
-                let valor = parseFloat(numero[0].replace(/\./g, '').replace(',', '.'));
-                if (!isNaN(valor)) {
-                    $(this).text('R$ ' + valor.toLocaleString('pt-BR', {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2
-                    }));
-                }
-            }
-        });
+        // FormataÃ§Ã£o de moeda Ã© feita globalmente no base.html
     });
 </script>
 {% endblock %}
+
+

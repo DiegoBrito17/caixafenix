@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}{{ titulo }} - Sistema de Caixa{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+{% block page_icon %}file-excel{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="main-card mb-3">
+        <div class="card-header bg-primary">
+            <h5 class="card-title">
+                <i class="fas fa-file-excel me-2"></i>{{ titulo }}
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-4 align-items-stretch">
+                <div class="col-lg-7">
+                    <div class="p-4 rounded-4" style="background: linear-gradient(135deg, rgba(31,59,115,.08), rgba(67,97,238,.05)); border: 1px solid rgba(31,59,115,.12);">
+                        <h5 class="mb-2">Como funciona</h5>
+                        <p class="text-muted mb-3">{{ subtitulo }}</p>
+                        <ol class="mb-4 ps-3">
+                            <li>Baixe o modelo da planilha.</li>
+                            <li>Preencha uma linha por venda ou delivery.</li>
+                            <li>Envie o arquivo para alimentar o sistema.</li>
+                        </ol>
+
+                        <div class="d-flex flex-wrap gap-2">
+                            <a href="{{ download_url }}" class="btn btn-primary">
+                                <i class="fas fa-download me-2"></i>Baixar Modelo
+                            </a>
+                            <a href="{{ url_for('vendas' if 'Venda' in titulo else 'delivery') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Voltar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-5">
+                    <div class="p-4 rounded-4 bg-white border h-100">
+                        <h5 class="mb-3">Enviar planilha</h5>
+                        <form method="post" enctype="multipart/form-data">
+                            <div class="mb-3">
+                                <label class="form-label">Arquivo Excel (.xlsx)</label>
+                                <input type="file" name="arquivo" class="form-control" accept=".xlsx" required>
+                            </div>
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    <i class="fas fa-cloud-upload-alt me-2"></i>Importar Agora
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="main-card">
+        <div class="card-header bg-dark">
+            <h5 class="card-title">
+                <i class="fas fa-list-ul me-2"></i>Colunas da planilha
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped align-middle mb-0">
+                    <thead>
+                        <tr>
+                            {% for campo in campos %}
+                            <th>{{ campo }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            {% for campo in campos %}
+                            <td class="text-muted">Preencher</td>
+                            {% endfor %}
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <small class="text-muted d-block mt-3">
+                Observação: cada linha da planilha será importada como um registro novo no sistema.
+            </small>
+        </div>
+    </div>
+</div>
+{% endblock %}

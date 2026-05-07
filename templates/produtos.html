@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+{% block page_icon %}boxes{% endblock %}
+{% block page_title %}Produtos{% endblock %}
+{% block title %}Produtos{% endblock %}
+{% block content %}
+<div class="main-card">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h3>Produtos</h3>
+      <div>
+        <a class="btn btn-primary" href="{{ url_for('produtos_novo') }}"><i class="fas fa-plus me-1"></i>Novo Produto</a>
+      </div>
+    </div>
+    <div class="data-table-container">
+      <table class="table data-table">
+        <thead><tr><th>ID</th><th>Código</th><th>Nome</th><th>Categoria</th><th>Unidade</th><th>Qtd</th><th>Custo</th><th>Preço venda</th><th>Ações</th></tr></thead>
+        <tbody>
+          {% for p in produtos %}
+          <tr>
+            <td>{{ p.id }}</td>
+            <td>{{ p.codigo or '-' }}</td>
+            <td>{{ p.nome }}</td>
+            <td>{{ p.categoria or '-' }}</td>
+            <td>{{ p.unidade or 'UN' }}</td>
+            <td>{{ p.quantidade or 0 }}</td>
+            <td>{{ format_currency(p.custo) }}</td>
+            <td>{{ format_currency(p.preco_venda) }}</td>
+            <td>
+              <a class="btn btn-sm btn-outline-primary" href="{{ url_for('produtos_editar', produto_id=p.id) }}">Editar</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

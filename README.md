@@ -1,5 +1,16 @@
 # 💰 Sistema de Caixa - Flask
 
+See `DEPLOY.md` for production deployment and security checklist.
+
+**Quick GitHub / Hosting checklist**
+
+1. Create a new GitHub repository and push this project (do NOT commit `.env`).
+2. Add platform env vars: `SECRET_KEY`, `DATABASE_URL`, `ENV=production`, `ADMIN_PASSWORD`.
+3. Configure build to use `python -m pip install -r requirements.txt` and `Procfile` for web process (we use `gunicorn -w 4 -k gthread`).
+4. After first deploy, change the admin password and verify pages `/`, `/vendas`, `/delivery` load over HTTPS.
+
+CI: a basic GitHub Actions workflow is added at `.github/workflows/ci.yml` which installs dependencies and runs a simple DB creation smoke test.
+
 Sistema completo de gerenciamento de caixa para restaurantes, lanchonetes e deliveries desenvolvido em Python Flask.
 
 ## 🚀 Funcionalidades
@@ -68,14 +79,14 @@ cd sistema_caixa
 
 **Linux/Mac:**
 ```bash
-python3 -m venv venv
-source venv/bin/activate
+python3 -m venv .venv
+source .venv/bin/activate
 ```
 
 **Windows:**
 ```bash
-python -m venv venv
-venv\Scripts\activate
+python -m venv .venv
+.venv\Scripts\activate
 ```
 
 ### 3. Instale as dependências
@@ -87,15 +98,15 @@ pip install -r requirements.txt
 ### 4. Execute o sistema
 
 ```bash
-python app.py
+run_server.bat
 ```
 
-O sistema estará disponível em: **http://localhost:5000**
+O sistema iniciará em uma porta livre e mostrará a URL exata no terminal.
 
 ## 👤 Acesso Padrão
 
 **Usuário:** admin  
-**Senha:** 123
+**Senha:** definida no primeiro seed (ver terminal) ou via variável `ADMIN_PASSWORD`
 
 ## 📁 Estrutura do Projeto
 
@@ -104,7 +115,8 @@ sistema_caixa/
 │
 ├── app.py                      # Aplicação principal Flask
 ├── requirements.txt            # Dependências do projeto
-├── README.md                   # Este arquivo
+├── run_server.bat              # Inicializador recomendado no Windows
+├── iniciar.bat                 # Inicializador compatível com o projeto
 │
 ├── database/
 │   └── caixa.db               # Banco de dados SQLite (criado automaticamente)
@@ -242,8 +254,8 @@ O sistema utiliza SQLite (arquivo `database/caixa.db`) que é criado automaticam
 ### Erro ao iniciar
 ```bash
 # Certifique-se de estar no ambiente virtual
-source venv/bin/activate  # Linux/Mac
-venv\Scripts\activate     # Windows
+source .venv/bin/activate  # Linux/Mac
+.venv\Scripts\activate     # Windows
 
 # Reinstale as dependências
 pip install -r requirements.txt
@@ -266,7 +278,7 @@ from app import app, db, Usuario
 from werkzeug.security import generate_password_hash
 with app.app_context():
     admin = Usuario.query.filter_by(nome='admin').first()
-    admin.senha = generate_password_hash('123')
+    admin.senha = generate_password_hash('NOVA_SENHA_AQUI')
     db.session.commit()
 ```
 

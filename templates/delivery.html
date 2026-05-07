@@ -1,9 +1,16 @@
-{% extends "base.html" %}
+﻿{% extends "base.html" %}
 {% block title %}Delivery - Sistema de Caixa{% endblock %}
 {% block page_title %}Delivery{% endblock %}
 {% block page_icon %}motorcycle{% endblock %}
 
-{% block header_buttons %}{% endblock %}
+{% block header_buttons %}
+<a href="{{ url_for('delivery_modelo_planilha') }}" class="btn btn-outline-success btn-sm">
+    <i class="fas fa-file-excel me-1"></i>Baixar Planilha
+</a>
+<a href="{{ url_for('delivery_importar_planilha') }}" class="btn btn-success btn-sm">
+    <i class="fas fa-upload me-1"></i>Importar Planilha
+</a>
+{% endblock %}
 
 {% block styles %}
 <style>
@@ -23,6 +30,14 @@
         height: 34px;
         font-size: 1rem;
     }
+    /* Garantir contraste para ícones com classe .info */
+    .stat-card.compact .stat-icon.info {
+        background: linear-gradient(135deg,#2563eb,#1e40af);
+        color: #ffffff;
+        border-radius: 6px;
+        display:flex;align-items:center;justify-content:center
+    }
+    .stat-card.compact .stat-icon.info i { color: #ffffff; }
     .stat-card.compact .stat-content h3 {
         font-size: 1.3rem;
         margin-bottom: 0.1rem;
@@ -35,6 +50,17 @@
         padding: 0.7rem 0.85rem;
         min-height: 78px;
     }
+    .pay-cards .stat-card.compact .stat-card-inner{display:flex;align-items:center;gap:0.75rem}
+    .pay-cards .pay-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,0.06);box-shadow:0 2px 6px rgba(0,0,0,0.06)}
+    .pay-cards .pay-icon i{font-size:18px;color:rgba(0,0,0,0.75)}
+    .pay-cards .stat-content h3{font-weight:800;font-size:1.05rem}
+    .pay-cards .stat-content p{font-weight:700;margin:0;color:#374151;font-size:0.78rem}
+    .pay-cards .dinheiro .pay-icon{background:linear-gradient(135deg,#ecfccb,#bbf7d0)}
+    .pay-cards .credito .pay-icon{background:linear-gradient(135deg,#dbeafe,#bfdbfe)}
+    .pay-cards .debito .pay-icon{background:linear-gradient(135deg,#e0f2fe,#bae6fd)}
+    .pay-cards .pix .pay-icon{background:linear-gradient(135deg,#f0fdf4,#bbf7d0)}
+    .pay-cards .online .pay-icon{background:linear-gradient(135deg,#f3e8ff,#e9d5ff)}
+    .pay-cards .conta .pay-icon{background:linear-gradient(135deg,#fffbeb,#fde68a)}
     .pay-cards .stat-card.compact .stat-content h3 {
         font-size: 1.1rem;
     }
@@ -80,13 +106,91 @@
         color: #16a34a;
     }
     .delivery-top-tight {
-        margin-top: -6px;
+        margin-top: -14px;
+    }
+    .filters-card {
+        overflow: visible;
+        margin-bottom: 0.75rem !important;
+    }
+    .filters-card .filters-title {
+        font-size: 0.9rem;
+        font-weight: 700;
+        margin: 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .filters-card .form-label {
+        font-size: 0.75rem;
+        margin-bottom: 0.25rem;
+        opacity: 0.85;
+    }
+    .filters-card .form-control,
+    .filters-card .form-select {
+        padding-top: 0.35rem;
+        padding-bottom: 0.35rem;
+        font-size: 0.9rem;
+    }
+    .filters-card .form-control-sm,
+    .filters-card .form-select-sm {
+        font-size: 0.85rem;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+    }
+    .filters-card .btn-sm {
+        padding: 0.35rem 0.6rem;
+    }
+    .filters-card .card-header {
+        padding: 0.35rem 0.75rem;
+    }
+    .filters-card .card-body {
+        padding: 0.45rem 0.75rem;
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="container-fluid delivery-top-tight">
+    <div class="main-card mb-3 filters-card">
+        <div class="card-header bg-primary">
+            <h5 class="filters-title"><i class="fas fa-filter"></i>Filtros</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET" action="{{ url_for('delivery') }}" class="row g-1 align-items-end">
+                <div class="col-12 col-md-2 col-lg-2">
+                    <label class="form-label">Período</label>
+                    <select class="form-select form-select-sm" name="periodo">
+                        <option value="dia" {% if periodo_filtro == 'dia' %}selected{% endif %}>Dia</option>
+                        <option value="semana" {% if periodo_filtro == 'semana' %}selected{% endif %}>Semana</option>
+                        <option value="mes" {% if periodo_filtro == 'mes' %}selected{% endif %}>Mês</option>
+                    </select>
+                </div>
+                <div class="col-12 col-md-3 col-lg-3">
+                    <label class="form-label">Data inicial</label>
+                    <input type="date" class="form-control form-control-sm" name="data_inicio" value="{{ data_inicio_filtro.strftime('%Y-%m-%d') if data_inicio_filtro else '' }}">
+                </div>
+                <div class="col-12 col-md-3 col-lg-3">
+                    <label class="form-label">Data final</label>
+                    <input type="date" class="form-control form-control-sm" name="data_fim" value="{{ data_fim_filtro.strftime('%Y-%m-%d') if data_fim_filtro else '' }}">
+                </div>
+                <div class="col-12 col-md-2 col-lg-2">
+                    <label class="form-label">Turno</label>
+                    <select class="form-select form-select-sm" name="turno">
+                        {% for t in turnos_disponiveis %}
+                        <option value="{{ t }}" {% if t == turno_filtro %}selected{% endif %}>{{ t }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-12 col-md-2 col-lg-2 d-grid">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-search me-1"></i>Aplicar
+                    </button>
+                </div>
+            </form>
+            <div class="mt-1 small text-muted">Intervalo (inicial/final) tem prioridade.</div>
+        </div>
+    </div>
+
     <!-- Resumo Delivery -->
     <div class="stats-container delivery-kpis mb-3">
         <div class="stat-card compact">
@@ -99,7 +203,7 @@
                 </div>
             </div>
             <div class="stat-content">
-                <h3 class="currency-value">{{ totais_delivery.total_delivery|default(0) }}</h3>
+                <h3 class="currency-value">{{ format_currency(totais_delivery.total_delivery|default(0)) }}</h3>
                 <p>Total Delivery</p>
             </div>
         </div>
@@ -113,7 +217,7 @@
                 </div>
             </div>
             <div class="stat-content">
-                <h3 class="currency-value">{{ totais_delivery.total_taxas|default(0) }}</h3>
+                <h3 class="currency-value">{{ format_currency(totais_delivery.total_taxas|default(0)) }}</h3>
                 <p>Total Taxas</p>
             </div>
         </div>
@@ -143,10 +247,10 @@
             <div class="stat-content">
                 <h3 class="currency-value">
                     {% if totais_delivery.quantidade_pedidos > 0 %}
-                        {{ (totais_delivery.total_delivery / totais_delivery.quantidade_pedidos)|round(2) }}
-                    {% else %}0{% endif %}
+                        {{ format_currency((totais_delivery.total_delivery / totais_delivery.quantidade_pedidos)|round(2)) }}
+                    {% else %}{{ format_currency(0) }}{% endif %}
                 </h3>
-                <p>Ticket Médio</p>
+                <p>Ticket M&eacute;dio</p>
             </div>
         </div>
         <div class="stat-card compact">
@@ -176,49 +280,67 @@
             <div class="row g-3 pay-cards">
                 <div class="col-md-2 col-6">
                     <div class="stat-card compact p-3 dinheiro">
-                        <div class="stat-content">
-                            <h3 class="currency-value">{{ totais_delivery.dinheiro|default(0) }}</h3>
-                            <p>Dinheiro</p>
+                        <div class="stat-card-inner">
+                            <div class="pay-icon"><i class="fas fa-money-bill-wave"></i></div>
+                            <div class="stat-content">
+                                <h3 class="currency-value">{{ format_currency(totais_delivery.dinheiro|default(0)) }}</h3>
+                                <p>Dinheiro</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-2 col-6">
                     <div class="stat-card compact p-3 credito">
-                        <div class="stat-content">
-                            <h3 class="currency-value">{{ totais_delivery.credito|default(0) }}</h3>
-                            <p>Crédito</p>
+                        <div class="stat-card-inner">
+                            <div class="pay-icon"><i class="fas fa-credit-card"></i></div>
+                            <div class="stat-content">
+                                <h3 class="currency-value">{{ format_currency(totais_delivery.credito|default(0)) }}</h3>
+                                <p>Crédito</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-2 col-6">
                     <div class="stat-card compact p-3 debito">
-                        <div class="stat-content">
-                            <h3 class="currency-value">{{ totais_delivery.debito|default(0) }}</h3>
-                            <p>Débito</p>
+                        <div class="stat-card-inner">
+                            <div class="pay-icon"><i class="fas fa-credit-card"></i></div>
+                            <div class="stat-content">
+                                <h3 class="currency-value">{{ format_currency(totais_delivery.debito|default(0)) }}</h3>
+                                <p>Débito</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-2 col-6">
                     <div class="stat-card compact p-3 pix">
-                        <div class="stat-content">
-                            <h3 class="currency-value">{{ totais_delivery.pix|default(0) }}</h3>
-                            <p>PIX</p>
+                        <div class="stat-card-inner">
+                            <div class="pay-icon"><i class="fas fa-bolt"></i></div>
+                            <div class="stat-content">
+                                <h3 class="currency-value">{{ format_currency(totais_delivery.pix|default(0)) }}</h3>
+                                <p>PIX</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-2 col-6">
                     <div class="stat-card compact p-3 online">
-                        <div class="stat-content">
-                            <h3 class="currency-value">{{ totais_delivery.online|default(0) }}</h3>
-                            <p>Online</p>
+                        <div class="stat-card-inner">
+                            <div class="pay-icon"><i class="fas fa-globe"></i></div>
+                            <div class="stat-content">
+                                <h3 class="currency-value">{{ format_currency(totais_delivery.online|default(0)) }}</h3>
+                                <p>Online</p>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-2 col-6">
                     <div class="stat-card compact p-3 conta">
-                        <div class="stat-content">
-                            <h3 class="currency-value">{{ totais_delivery.contas_assinadas|default(0) }}</h3>
-                            <p>Conta Assinada</p>
+                        <div class="stat-card-inner">
+                            <div class="pay-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+                            <div class="stat-content">
+                                <h3 class="currency-value">{{ format_currency(totais_delivery.contas_assinadas|default(0)) }}</h3>
+                                <p>Conta Assinada</p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -494,9 +616,9 @@
                     title: 'Erro de Validação',
                     html: `A soma dos pagamentos (R$ ${totalPagamentos.toFixed(2)}) deve ser igual ao valor total do pedido (R$ ${totalComTaxa.toFixed(2)})!<br><br>
                            <strong>Detalhes:</strong><br>
-                           • Valor do pedido: R$ ${totalPedido.toFixed(2)}<br>
-                           • Taxa de entrega: R$ ${taxaEntrega.toFixed(2)}<br>
-                           • <strong>Total a pagar: R$ ${totalComTaxa.toFixed(2)}</strong>`,
+                           â€¢ Valor do pedido: R$ ${totalPedido.toFixed(2)}<br>
+                           â€¢ Taxa de entrega: R$ ${taxaEntrega.toFixed(2)}<br>
+                           â€¢ <strong>Total a pagar: R$ ${totalComTaxa.toFixed(2)}</strong>`,
                     confirmButtonText: 'Corrigir'
                 });
                 return false;
@@ -540,3 +662,5 @@
     });
 </script>
 {% endblock %}
+
+

@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block page_icon %}eye{% endblock %}
+{% block page_title %}Pré-visualizar Importação{% endblock %}
+{% block title %}Pré-visualizar Importação{% endblock %}
+{% block content %}
+<div class="main-card">
+  <div class="card-body">
+    <h3 class="mb-3">Pré-visualização dos itens encontrados</h3>
+    <p>Revise os itens abaixo e confirme para gravar no sistema e atualizar o estoque.</p>
+    <div class="data-table-container">
+      <table class="table data-table">
+        <thead>
+          <tr><th>Nome</th><th>Código</th><th>Quantidade</th><th>Unidade</th><th>Preço unitário</th></tr>
+        </thead>
+        <tbody>
+          {% for it in itens %}
+          <tr>
+            <td>{{ it.nome }}</td>
+            <td>{{ it.codigo or '-' }}</td>
+            <td>{{ it.quantidade }}</td>
+            <td>{{ it.unidade or 'UN' }}</td>
+            <td>{{ it.preco_unitario }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <form method="post">
+      <input type="hidden" name="xml_b64" value="{{ xml_b64 }}">
+      <input type="hidden" name="fornecedor" value="{{ fornecedor }}">
+      <input type="hidden" name="conversao" value="{{ conversao }}">
+      <input type="hidden" name="confirm" value="1">
+      <button class="btn btn-success"><i class="fas fa-check me-1"></i> Confirmar Importação</button>
+      <a class="btn btn-secondary" href="{{ url_for('compras_importar') }}">Cancelar</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

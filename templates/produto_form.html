@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block page_icon %}edit{% endblock %}
+{% block page_title %}Cadastro de Produto{% endblock %}
+{% block title %}Cadastro de Produto{% endblock %}
+{% block content %}
+<div class="main-card">
+  <div class="card-body">
+    <h3>{{ produto and 'Editar Produto' or 'Novo Produto' }}</h3>
+    <form method="post">
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Código</label>
+          <input name="codigo" class="form-control" value="{{ produto.codigo if produto else '' }}">
+        </div>
+        <div class="col-md-8 mb-3">
+          <label class="form-label">Nome</label>
+          <input name="nome" class="form-control" value="{{ produto.nome if produto else '' }}" required>
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Categoria</label>
+          <input name="categoria" class="form-control" value="{{ produto.categoria if produto else '' }}">
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Unidade</label>
+          <input name="unidade" class="form-control" value="{{ produto.unidade if produto else 'UN' }}">
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Tamanho / Observação</label>
+          <input name="tamanho" class="form-control" value="{{ produto.tamanho if produto and produto.tamanho else '' }}">
+        </div>
+        <div class="col-md-3 mb-3">
+          <label class="form-label">Quantidade</label>
+          <input name="quantidade" class="form-control" value="{{ produto.quantidade if produto else 0 }}">
+        </div>
+        <div class="col-md-3 mb-3">
+          <label class="form-label">Estoque mínimo</label>
+          <input name="estoque_minimo" class="form-control" value="{{ produto.estoque_minimo if produto else 0 }}">
+        </div>
+        <div class="col-md-3 mb-3">
+          <label class="form-label">Estoque máximo</label>
+          <input name="estoque_maximo" class="form-control" value="{{ produto.estoque_maximo if produto else 0 }}">
+        </div>
+        <div class="col-md-3 mb-3">
+          <label class="form-label">Ativo</label>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" name="ativo" {% if produto and produto.ativo %}checked{% endif %}>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Custo (preço unitário)</label>
+          <input name="custo" class="form-control currency" value="{{ produto.custo if produto else '0' }}">
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label">Preço de venda</label>
+          <input name="preco_venda" class="form-control currency" value="{{ produto.preco_venda if produto else '0' }}">
+        </div>
+      </div>
+      <button class="btn btn-primary">Salvar</button>
+      <a class="btn btn-secondary" href="{{ url_for('produtos') }}">Voltar</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

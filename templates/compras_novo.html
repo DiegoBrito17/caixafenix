@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+{% block page_icon %}plus-square{% endblock %}
+{% block page_title %}Nova Compra (Balção){% endblock %}
+{% block title %}Nova Compra (Balção){% endblock %}
+{% block content %}
+<div class="main-card">
+  <div class="card-body">
+    <h2 class="mb-3">Nova Compra — Nota de Balcão</h2>
+    <form method="post">
+  <div class="mb-3">
+    <label class="form-label">Fornecedor</label>
+    <input type="text" name="fornecedor" class="form-control">
+  </div>
+  <table class="table" id="itens">
+    <thead><tr><th>Nome</th><th>Código</th><th>Quantidade</th><th>Preço (por embalagem)</th><th>Conversão (unidades/embalagem)</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td style="width:35%"><input name="nome[]" class="form-control produto-nome" autocomplete="off"></td>
+        <td style="width:12%"><input name="codigo[]" class="form-control produto-codigo"></td>
+        <td style="width:12%"><input name="quantidade[]" class="form-control produto-quantidade"></td>
+        <td style="width:15%"><input name="preco[]" class="form-control produto-preco"></td>
+        <td style="width:12%"><input name="conversao[]" class="form-control produto-conversao" value="1"></td>
+        <td><button type="button" class="btn btn-sm btn-danger" onclick="removerLinha(this)">-</button></td>
+      </tr>
+    </tbody>
+  </table>
+  <p><button type="button" class="btn btn-sm btn-outline-primary" onclick="adicionarLinha()">Adicionar Item</button></p>
+  <button class="btn btn-primary">Registrar Compra</button>
+  <a class="btn btn-secondary" href="{{ url_for('compras') }}">Voltar</a>
+</form>
+
+<script>
+function adicionarLinha(){
+  const tbody = document.querySelector('#itens tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td><input name="nome[]" class="form-control"></td>
+    <td><input name="codigo[]" class="form-control"></td>
+    <td><input name="quantidade[]" class="form-control"></td>
+    <td><input name="preco[]" class="form-control"></td>
+    <td><input name="conversao[]" class="form-control" value="1"></td>
+    <td><button type="button" class="btn btn-sm btn-danger" onclick="removerLinha(this)">-</button></td>
+  `;
+  tbody.appendChild(tr);
+}
+function removerLinha(btn){
+  const tr = btn.closest('tr');
+  tr.remove();
+}
+</script>
+<script>
+// Autocomplete simples usando API /api/produtos/search
+function attachAutocomplete(row){
+  const input = $(row).find('.produto-nome');
+  const codigo = $(row).find('.produto-codigo');
+  const preco = $(row).find('.produto-preco');
+  const unidade = null;
+
+  let box = $('<div class="list-group position-absolute shadow-sm d-none" style="z-index:2000;
+    max-height:220px; overflow:auto; width: calc(100% - 40px);"></div>');
+  $(row).find('td').first().css('position','relative').append(box);
+
+  input.on('input', function(){
+    const q = $(this).val();
+    if(!q || q.length < 2) { box.addClass('d-none'); return; }
+    $.getJSON('/api/produtos/search', {q: q}).done(function(data){
+      box.empty();
+      if(!data || data.length == 0){ box.addClass('d-none'); return; }
+      data.forEach(function(p){
+        const item = $(`<a href="#" class="list-group-item list-group-item-action">${p.nome} <small class="text-muted">(${p.codigo||''})</small></a>`);
+        item.on('click', function(e){ e.preventDefault();
+          input.val(p.nome);
+          codigo.val(p.codigo || '');
+          preco.val(p.preco_venda || p.custo || 0);
+          box.addClass('d-none');
+        });
+        box.append(item);
+      });
+      box.removeClass('d-none');
+    });
+  });
+
+  // esconder ao clicar fora
+  $(document).on('click.produto', function(e){ if(!$(e.target).closest(box).length && !$(e.target).is(input)) box.addClass('d-none'); });
+}
+
+// attach to existing row
+attachAutocomplete($('#itens tbody tr').first());
+
+function adicionarLinha(){
+  const tbody = document.querySelector('#itens tbody');
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td style="width:35%"><input name="nome[]" class="form-control produto-nome" autocomplete="off"></td>
+    <td style="width:12%"><input name="codigo[]" class="form-control produto-codigo"></td>
+    <td style="width:12%"><input name="quantidade[]" class="form-control produto-quantidade"></td>
+    <td style="width:15%"><input name="preco[]" class="form-control produto-preco"></td>
+    <td style="width:12%"><input name="conversao[]" class="form-control produto-conversao" value="1"></td>
+    <td><button type="button" class="btn btn-sm btn-danger" onclick="removerLinha(this)">-</button></td>
+  `;
+  tbody.appendChild(tr);
+  attachAutocomplete($(tr));
+}
+</script>
+{% endblock %}

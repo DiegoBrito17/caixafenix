@@ -123,7 +123,7 @@
                 </div>
             </div>
             <div class="stat-content">
-                <h3 class="currency-value">{{ metricas.total_receitas|default(0) }}</h3>
+                <h3 class="currency-value">{{ format_currency(metricas.total_receitas|default(0)) }}</h3>
                 <p>Total Receitas</p>
             </div>
         </div>
@@ -138,7 +138,7 @@
                 </div>
             </div>
             <div class="stat-content">
-                <h3 class="currency-value">{{ metricas.saldo_liquido|default(0) }}</h3>
+                <h3 class="currency-value">{{ format_currency(metricas.saldo_liquido|default(0)) }}</h3>
                 <p>Lucro Líquido</p>
             </div>
         </div>
@@ -169,7 +169,7 @@
             </div>
             <div class="stat-content">
                 <h3>{{ format_currency(metricas.ticket_medio|default(0)) }}</h3>
-                <p>Ticket Médio</p>
+                <p>Ticket M&eacute;dio</p>
             </div>
         </div>
     </div>
@@ -214,6 +214,23 @@
                 <div class="card-body">
                     <div class="chart-box">
                         <canvas id="chartDespesas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-12">
+            <div class="main-card h-100 chart-card">
+                <div class="card-header bg-primary">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-clock me-2"></i>Vendas por Hora
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-box-lg">
+                        <canvas id="chartHorario"></canvas>
                     </div>
                 </div>
             </div>
@@ -294,15 +311,15 @@
                             <td>{{ caixa.data.strftime('%d/%m/%Y') }}</td>
                             <td><span class="badge bg-primary">{{ caixa.turno }}</span></td>
                             <td>{{ caixa.operador.nome }}</td>
-                            <td class="currency-value">{{ caixa.saldo_inicial|default(0) }}</td>
+                            <td class="currency-value">{{ format_currency(caixa.saldo_inicial|default(0)) }}</td>
                             <td>
                                 {% set totais = calcular_totais_caixa(caixa) %}
-                                <span class="currency-value">{{ totais.total_vendas|default(0) }}</span>
+                                <span class="currency-value">{{ format_currency(totais.total_vendas|default(0)) }}</span>
                             </td>
-                            <td class="currency-value">{{ totais.despesas|default(0) }}</td>
+                            <td class="currency-value">{{ format_currency(totais.despesas|default(0)) }}</td>
                             <td>
                                 {% if caixa.saldo_final %}
-                                    <span class="currency-value">{{ caixa.saldo_final|default(0) }}</span>
+                                    <span class="currency-value">{{ format_currency(caixa.saldo_final|default(0)) }}</span>
                                 {% else %}
                                     <span class="text-muted">-</span>
                                 {% endif %}
@@ -339,6 +356,25 @@
 {% block scripts %}
 <script>
     $(document).ready(function() {
+        const brl = (valor) => Number(valor || 0).toLocaleString('pt-BR', {
+            style: 'currency',
+            currency: 'BRL'
+        });
+        const chartTooltip = {
+            callbacks: {
+                label: function(context) {
+                    const raw = typeof context.raw === 'number' ? context.raw : (context.parsed && context.parsed.y !== undefined ? context.parsed.y : context.parsed);
+                    return `${context.label ? context.label + ': ' : ''}${brl(raw)}`;
+                }
+            }
+        };
+        const moneyScale = {
+            ticks: {
+                callback: function(value) {
+                    return brl(value);
+                }
+            }
+        };
         // Controle do filtro de período
         $('#periodo').change(function() {
             if ($(this).val() === 'custom') {
@@ -373,7 +409,8 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom' } }
+                plugins: { legend: { position: 'bottom' }, tooltip: chartTooltip },
+                tooltips: chartTooltip
             }
         });
         
@@ -387,20 +424,22 @@
                     backgroundColor: ['#4361ee', '#4cc9f0', '#f72585']
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: chartTooltip }, tooltips: chartTooltip, scales: { y: moneyScale, yAxes: [{ ticks: { callback: function(value){ return brl(value); } } }] } }
         });
         
         // Despesas por categoria
         new Chart(document.getElementById('chartDespesas'), {
-            type: 'pie',
+            type: 'bar',
             data: {
                 labels: despesasLabels,
                 datasets: [{
                     data: despesasValues,
-                    backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6']
+                    backgroundColor: ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6'],
+                    borderRadius: 8,
+                    maxBarThickness: 42
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: chartTooltip }, tooltips: chartTooltip, scales: { y: moneyScale, yAxes: [{ ticks: { callback: function(value){ return brl(value); } } }] } }
         });
         
         // Motoboys
@@ -413,7 +452,7 @@
                     backgroundColor: '#20c997'
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: chartTooltip }, tooltips: chartTooltip, scales: { y: moneyScale, yAxes: [{ ticks: { callback: function(value){ return brl(value); } } }] } }
         });
         
         // Tipos de venda
@@ -430,7 +469,7 @@
                     backgroundColor: ['#4361ee', '#4cc9f0', '#f72585']
                 }]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' }, tooltip: chartTooltip }, tooltips: chartTooltip }
         });
         
         // Linha do tempo (Receitas x Despesas)
@@ -456,7 +495,34 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { position: 'bottom' } }
+                plugins: { legend: { position: 'bottom' }, tooltip: chartTooltip },
+                tooltips: chartTooltip,
+                scales: { y: moneyScale, yAxes: [{ ticks: { callback: function(value){ return brl(value); } } }] }
+            }
+        });
+
+        const vendasPorHora = {{ metricas_avancadas.vendas_por_hora|default({})|tojson }};
+        const horas = Object.keys(vendasPorHora);
+        const valoresHoras = Object.values(vendasPorHora);
+
+        new Chart(document.getElementById('chartHorario'), {
+            type: 'bar',
+            data: {
+                labels: horas,
+                datasets: [{
+                    label: 'Vendas por Hora',
+                    data: valoresHoras,
+                    backgroundColor: '#0ea5e9',
+                    borderRadius: 8,
+                    maxBarThickness: 28
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: chartTooltip },
+                tooltips: chartTooltip,
+                scales: { y: moneyScale, yAxes: [{ ticks: { callback: function(value){ return brl(value); } } }] }
             }
         });
         

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block page_icon %}info-circle{% endblock %}
+{% block page_title %}Detalhes da Compra{% endblock %}
+{% block title %}Detalhes da Compra{% endblock %}
+{% block content %}
+<div class="main-card">
+  <div class="card-body">
+    <h2 class="mb-3">Compra #{{ compra.id }}</h2>
+    <p>Data: {{ compra.data.strftime('%d/%m/%Y %H:%M') }} — Tipo: {{ compra.tipo }} — Fornecedor: {{ compra.fornecedor or '-' }}</p>
+    <div class="data-table-container">
+    <table class="table table-sm data-table">
+  <thead><tr><th>Nome</th><th>Código</th><th>Quantidade</th><th>Unidade</th><th>Preço unitário</th><th>Subtotal</th></tr></thead>
+  <tbody>
+    {% for it in compra.itens %}
+    <tr>
+      <td>{{ it.nome }}</td>
+      <td>{{ it.codigo or '-' }}</td>
+      <td>{{ it.quantidade }}</td>
+      <td>{{ it.unidade or 'UN' }}</td>
+      <td>{{ format_currency(it.preco_unitario) }}</td>
+      <td>{{ format_currency(it.preco_unitario * it.quantidade) }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<p><strong>Total:</strong> {{ format_currency(compra.total) }}</p>
+<p><a class="btn btn-secondary" href="{{ url_for('compras') }}">Voltar</a></p>
+{% endblock %}

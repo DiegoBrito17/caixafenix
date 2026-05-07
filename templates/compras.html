@@ -1,0 +1,33 @@
+{% extends 'base.html' %}
+{% block page_icon %}receipt{% endblock %}
+{% block page_title %}Compras{% endblock %}
+{% block title %}Compras{% endblock %}
+{% block content %}
+<div class="main-card">
+  <div class="card-body">
+    {% block header_buttons %}
+    <a class="btn btn-primary me-2" href="{{ url_for('compras_importar') }}"><i class="fas fa-file-import me-1"></i> Importar XML</a>
+    <a class="btn btn-secondary" href="{{ url_for('compras_novo') }}"><i class="fas fa-plus me-1"></i> Nova Compra</a>
+    {% endblock %}
+    <h2 class="mb-3">Compras</h2>
+  <div class="data-table-container">
+  <table class="table table-striped data-table">
+  <thead>
+    <tr><th>ID</th><th>Data</th><th>Tipo</th><th>Fornecedor</th><th>Total</th><th>Ações</th></tr>
+  </thead>
+  <tbody>
+    {% for c in compras %}
+    <tr>
+      <td>{{ c.id }}</td>
+      <td>{{ c.data.strftime('%d/%m/%Y %H:%M') }}</td>
+      <td>{{ c.tipo }}</td>
+      <td>{{ c.fornecedor or '-' }}</td>
+      <td>{{ format_currency(c.total) }}</td>
+      <td><a href="{{ url_for('compra_detalhes', compra_id=c.id) }}">Detalhes</a></td>
+    </tr>
+    {% else %}
+    <tr><td colspan="6">Nenhuma compra registrada.</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

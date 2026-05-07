@@ -3748,7 +3748,7 @@ def debug_licencas():
     for licenca in licencas:
         print(f"\nID: {licenca.id}")
         print(f"E-mail: {licenca.email}")
-        print(f"Chave: {licenca.chave_ativacao}")
+        print(f"Chave: (oculta)")
         print(f"Status: {licenca.status}")
         print(f"AtivaÃ§Ã£o: {licenca.data_ativacao}")
         print(f"ExpiraÃ§Ã£o: {licenca.data_expiracao}")
@@ -4375,7 +4375,7 @@ def init_db():
                     db.session.commit()
                     print("⚠️  Usuário 'ADMIN MASTER' recriado automaticamente (MASTER_PASSWORD não definido).")
                     print("⚠️  Altere a senha imediatamente pelo painel de usuários.")
-                    print(f"🔐 Senha temporária (somente esta vez): {master_password}")
+                    print("🔐 Senha temporária criada — valor ocultado por segurança. Defina MASTER_PASSWORD no ambiente para controlar esta senha.")
 
             # Garantir que exista ao menos um admin (somente se não houver nenhum)
             admin_exists = Usuario.query.filter_by(perfil='ADMIN', ativo=True).first() is not None
@@ -4394,7 +4394,7 @@ def init_db():
                 db.session.commit()
                 print("⚠️  Usuário 'admin' criado automaticamente (ADMIN_PASSWORD não definido).")
                 print("⚠️  Altere a senha imediatamente pelo painel de usuários.")
-                print(f"🔐 Senha temporária (somente esta vez): {admin_password}")
+                print("🔐 Senha temporária criada — valor ocultado por segurança. Defina ADMIN_PASSWORD no ambiente para controlar esta senha.")
 
             return
         
@@ -4426,11 +4426,11 @@ def init_db():
         if not _env_password('MASTER_PASSWORD'):
             print("✅ Seed inicial: usuário 'ADMIN MASTER' criado.")
             print("⚠️  Defina MASTER_PASSWORD para evitar senha aleatória.")
-            print(f"🔐 Senha temporária (somente esta vez): {master_password}")
+            print("🔐 Senha temporária criada — valor ocultado por segurança. Defina MASTER_PASSWORD no ambiente para controlar esta senha.")
         if not _env_password('ADMIN_PASSWORD'):
             print("✅ Seed inicial: usuário 'admin' criado.")
             print("⚠️  Defina ADMIN_PASSWORD para evitar senha aleatória.")
-            print(f"🔐 Senha temporária (somente esta vez): {admin_password}")
+            print("🔐 Senha temporária criada — valor ocultado por segurança. Defina ADMIN_PASSWORD no ambiente para controlar esta senha.")
 
         # Criar formas de pagamento padrÃ£o
         formas = [

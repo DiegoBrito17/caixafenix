@@ -103,6 +103,47 @@ run_server.bat
 
 O sistema iniciará em uma porta livre e mostrará a URL exata no terminal.
 
+## 🏁 Executar localmente (resumo rápido)
+
+1. Copie o exemplo de variáveis de ambiente:
+
+```bash
+copy .env.example .env  # Windows
+cp .env.example .env    # Linux/Mac
+```
+
+2. Ajuste em `.env` (pelo menos): `SECRET_KEY`, `ENV=development|production`.
+
+3. Crie e ative venv, instale dependências:
+
+```bash
+python -m venv .venv
+.venv\Scripts\activate    # Windows
+pip install -r requirements.txt
+```
+
+4. Inicie (desenvolvimento):
+
+```bash
+set FLASK_APP=app.py
+set FLASK_ENV=development
+python -m flask run --host=0.0.0.0 --port=5000
+```
+
+5. Inicie em produção com Gunicorn (Linux) ou configure `Procfile` no host:
+
+```bash
+gunicorn -w 4 -k gthread app:app
+```
+
+## ☁️ Deploy na nuvem (resumo)
+
+- Garanta variáveis de ambiente no provedor: `SECRET_KEY`, `DATABASE_URL`, `ENV=production`, `ADMIN_PASSWORD`.
+- Não comite arquivos `.env` ou o diretório `database/`.
+- Use `Procfile` existente para Heroku/Render; em Docker, exponha a porta e execute `gunicorn`.
+
+Se quiser, eu posso criar um `Dockerfile` e `docker-compose.yml` prontos para deploy.
+
 ## 👤 Acesso Padrão
 
 **Usuário:** admin  

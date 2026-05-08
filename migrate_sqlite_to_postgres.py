@@ -3,7 +3,13 @@ from sqlalchemy import create_engine, MetaData, Table, select, text
 
 # Config
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SQLITE_PATH = os.environ.get('SQLITE_PATH', os.path.join(BASE_DIR, 'database', 'caixa.db'))
+_env_sqlite_path = os.environ.get('SQLITE_PATH')
+_sqlite_candidates = [
+    _env_sqlite_path,
+    os.path.join(BASE_DIR, 'database', 'caixa.db'),
+    os.path.join(BASE_DIR, 'caixa_completo.db'),
+]
+SQLITE_PATH = next((p for p in _sqlite_candidates if p and os.path.exists(p)), None)
 DATABASE_URL = os.environ.get('DATABASE_URL')
 RUN_MIGRATION = os.environ.get('RUN_MIGRATION', '0') == '1'
 
@@ -13,7 +19,7 @@ if not DATABASE_URL:
 if DATABASE_URL.startswith('postgres://'):
     DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
 
-SQLITE_URL = f"sqlite:///{SQLITE_PATH}"
+SQLITE_URL = f"sqlite:///{SQLITE_PATH}" if SQLITE_PATH else None
 
 TABLE_ORDER = [
     'usuario',
@@ -42,8 +48,12 @@ def main():
         print("Migração ignorada (RUN_MIGRATION != 1).")
         return
 
-    if not os.path.exists(SQLITE_PATH):
-        print(f"SQLite não encontrado em {SQLITE_PATH}. Migração ignorada.")
+    if not SQLITE_PATH:
+        tried = [p for p in _sqlite_candidates if p]
+        if tried:
+            print(f"SQLite não encontrado. Caminhos tentados: {', '.join(tried)}. Migração ignorada.")
+        else:
+            print("SQLite não encontrado (SQLITE_PATH não definido). Migração ignorada.")
         return
 
     src_engine = create_engine(SQLITE_URL)

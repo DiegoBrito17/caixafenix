@@ -30,3 +30,7 @@ iniciar.bat
 
 # Export do banco completo (quando necessário versionar)
 !caixa_completo.db
+
+# Versionar o banco usado em produção/local (mesmo dentro de pasta ignorada)
+!database/
+!database/caixa.db

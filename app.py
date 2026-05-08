@@ -35,7 +35,15 @@ def set_secure_headers(response):
     if os.environ.get('ENV', '').lower() == 'production':
         response.headers.setdefault('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload')
     # CSP mínima (permitir recursos do mesmo host e CDNs usados)
-    csp = "default-src 'self' 'unsafe-inline' https: data:; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data:; font-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net"
+    csp = (
+        "default-src 'self' 'unsafe-inline' https: data:; "
+        "script-src 'self' 'unsafe-inline' "
+        "https://cdn.jsdelivr.net https://code.jquery.com https://cdn.datatables.net https://unpkg.com https://cdnjs.cloudflare.com; "
+        "style-src 'self' 'unsafe-inline' "
+        "https://cdn.jsdelivr.net https://cdn.datatables.net https://unpkg.com https://cdnjs.cloudflare.com; "
+        "img-src 'self' https: data:; "
+        "font-src 'self' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net;"
+    )
     response.headers.setdefault('Content-Security-Policy', csp)
     return response
 

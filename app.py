@@ -78,14 +78,8 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 db_path = os.path.join(basedir, 'database')
 # Criar pasta database se nÃ£o existir
 os.makedirs(db_path, exist_ok=True)
-# Se existir um banco "completo" versionado no repositório, usar como base (não apaga o atual).
+# Banco SQLite versionado/esperado em `database/caixa.db` (dev/local).
 _sqlite_db_file = os.path.join(db_path, 'caixa.db')
-_sqlite_seed_file = os.path.join(basedir, 'caixa_completo.db')
-try:
-    if not os.path.exists(_sqlite_db_file) and os.path.exists(_sqlite_seed_file):
-        shutil.copyfile(_sqlite_seed_file, _sqlite_db_file)
-except Exception:
-    pass
 # Render/Prod: usar DATABASE_URL (PostgreSQL). Dev local: SQLite.
 # Railway/Render podem usar nomes diferentes de env.
 database_url = (

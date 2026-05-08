@@ -97,7 +97,18 @@ if database_url:
         database_url = database_url.replace('postgresql+psycopg2://', 'postgresql+psycopg://', 1)
     elif database_url.startswith('postgresql://'):
         database_url = database_url.replace('postgresql://', 'postgresql+psycopg://', 1)
-    app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    # Se DATABASE_URL estiver inválida (ex.: role sem LOGIN), cair para SQLite ao invés de quebrar o app.
+    try:
+        from sqlalchemy import create_engine
+        test_url = database_url
+        if 'connect_timeout=' not in test_url:
+            test_url = test_url + ('&' if '?' in test_url else '?') + 'connect_timeout=5'
+        with create_engine(test_url).connect():
+            pass
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    except Exception as e:
+        print(f"[WARN] Falha ao conectar no PostgreSQL via DATABASE_URL: {e}. Usando SQLite local.")
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(db_path, 'caixa.db')
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(db_path, 'caixa.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False

@@ -57,7 +57,17 @@ def main():
         return
 
     src_engine = create_engine(SQLITE_URL)
-    dst_engine = create_engine(DATABASE_URL)
+
+    try:
+        test_url = DATABASE_URL
+        if 'connect_timeout=' not in test_url:
+            test_url = test_url + ('&' if '?' in test_url else '?') + 'connect_timeout=5'
+        dst_engine = create_engine(test_url)
+        with dst_engine.connect():
+            pass
+    except Exception as e:
+        print(f"Falha ao conectar no PostgreSQL via DATABASE_URL: {e}. Migração ignorada.")
+        return
 
     # Criar tabelas no destino via app models
     from app import app, db  # noqa
